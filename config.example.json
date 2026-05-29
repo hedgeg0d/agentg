@@ -1,0 +1,5 @@
+{
+  "token": "PUT-YOUR-TELEGRAM-BOT-TOKEN-HERE",
+  "data_dir": "data",
+  "command_timeout_seconds": 30
+}
