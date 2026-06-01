@@ -19,6 +19,10 @@ func (b *Bot) send(chat int64, text string) {
 	b.dispatch(msg)
 }
 
+func (b *Bot) sendPlain(chat int64, text string) {
+	b.dispatch(tgbotapi.NewMessage(chat, text))
+}
+
 func (b *Bot) sendKeyboard(chat int64, text string, kb tgbotapi.ReplyKeyboardMarkup) {
 	msg := tgbotapi.NewMessage(chat, text)
 	msg.ParseMode = tgbotapi.ModeMarkdown

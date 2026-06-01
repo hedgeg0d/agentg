@@ -14,6 +14,9 @@ Pure Go, **no cgo**, so it cross-compiles cleanly to targets like RISC-V.
 - **Services** — inspect `systemd` units, start/stop/restart them, and pin favorites
   to a quick-access list for one-tap control.
 - **Status** — one-shot host snapshot (hostname, kernel, resources).
+- **D-Bus notifications** — local programs can push notifications to Telegram over
+  D-Bus, and the bot can optionally pose as the freedesktop notification daemon so
+  plain `notify-send` is forwarded too.
 - **Access control** — declarative whitelist policy plus runtime management:
   admins, allowed Telegram IDs and `@usernames`, an optional shared password, and
   password sessions with a configurable TTL. Admins manage the whitelist from inside
@@ -50,6 +53,39 @@ Policy is seeded from `config.json` and combined with runtime state persisted to
 Everyone else gets a clear *access denied* reply showing their ID and username so an
 admin can add them in two taps.
 
+## D-Bus notifications
+
+Enable the service in `config.json`:
+
+```json
+"notifications": {
+  "dbus_enabled": true,
+  "system_bus": false,
+  "replace_notify_send": true
+}
+```
+
+The bot exposes `com.agentg.Notifier` on the session bus (or the system bus when
+`system_bus` is `true`). Any local program can deliver a notification to every
+recipient (admins and allowed numeric IDs):
+
+```sh
+gdbus call --session \
+  --dest com.agentg.Notifier \
+  --object-path /com/agentg/Notifier \
+  --method com.agentg.Notifier.Notify "Backup" "nightly backup finished"
+```
+
+With `replace_notify_send`, the bot also claims `org.freedesktop.Notifications`, so
+standard tooling is forwarded to Telegram with no code changes:
+
+```sh
+notify-send "Disk" "root volume is 85% full"
+```
+
+This best-effort claim is skipped (with a log line) if a desktop notification daemon
+already owns that name, so it is intended for headless machines.
+
 ## Architecture
 
 ```
@@ -60,6 +96,7 @@ internal/store          pinned services (JSON persistence)
 internal/shell          persistent bash sessions
 internal/monitor        /proc-based resource sampling + rendering
 internal/services       systemd control
+internal/notify         D-Bus notification service
 internal/bot            Telegram handlers, keyboards, routing
 ```
 

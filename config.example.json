@@ -8,5 +8,10 @@
     "allowed_usernames": [],
     "password": "",
     "session_ttl_minutes": 1440
+  },
+  "notifications": {
+    "dbus_enabled": false,
+    "system_bus": false,
+    "replace_notify_send": false
   }
 }

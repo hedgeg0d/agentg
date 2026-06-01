@@ -11,6 +11,7 @@ import (
 	"github.com/hedgeg0d/agentg/internal/auth"
 	"github.com/hedgeg0d/agentg/internal/bot"
 	"github.com/hedgeg0d/agentg/internal/config"
+	"github.com/hedgeg0d/agentg/internal/notify"
 	"github.com/hedgeg0d/agentg/internal/store"
 )
 
@@ -42,6 +43,14 @@ func main() {
 	b, err := bot.New(cfg, az, st)
 	if err != nil {
 		log.Fatalf("bot: %v", err)
+	}
+	if n := cfg.Notifications; n.DBusEnabled {
+		svc, err := notify.Start(n.SystemBus, n.ReplaceNotifySend, b.Notify)
+		if err != nil {
+			log.Fatalf("notify: %v", err)
+		}
+		defer svc.Close()
+		log.Print("dbus notification service started")
 	}
 	b.Run()
 }

@@ -8,10 +8,17 @@ import (
 )
 
 type Config struct {
-	Token          string `json:"token"`
-	DataDir        string `json:"data_dir"`
-	CommandTimeout int    `json:"command_timeout_seconds"`
-	Access         Access `json:"access"`
+	Token          string        `json:"token"`
+	DataDir        string        `json:"data_dir"`
+	CommandTimeout int           `json:"command_timeout_seconds"`
+	Access         Access        `json:"access"`
+	Notifications  Notifications `json:"notifications"`
+}
+
+type Notifications struct {
+	DBusEnabled       bool `json:"dbus_enabled"`
+	SystemBus         bool `json:"system_bus"`
+	ReplaceNotifySend bool `json:"replace_notify_send"`
 }
 
 type Access struct {

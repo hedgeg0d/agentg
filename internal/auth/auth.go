@@ -172,6 +172,30 @@ func (a *Authorizer) Entries() []Entry {
 	return out
 }
 
+func (a *Authorizer) Recipients() []int64 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	seen := map[int64]bool{}
+	var out []int64
+	add := func(ids ...int64) {
+		for _, id := range ids {
+			if !seen[id] {
+				seen[id] = true
+				out = append(out, id)
+			}
+		}
+	}
+	for id := range a.seedAdmins {
+		add(id)
+	}
+	for id := range a.seedUsers {
+		add(id)
+	}
+	add(a.st.Admins...)
+	add(a.st.Users...)
+	return out
+}
+
 func (a *Authorizer) isAdmin(id int64) bool {
 	return a.seedAdmins[id] || slices.Contains(a.st.Admins, id)
 }
