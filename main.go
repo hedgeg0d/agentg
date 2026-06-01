@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/hedgeg0d/agentg/internal/auth"
 	"github.com/hedgeg0d/agentg/internal/bot"
 	"github.com/hedgeg0d/agentg/internal/config"
 	"github.com/hedgeg0d/agentg/internal/store"
@@ -21,7 +22,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("store: %v", err)
 	}
-	b, err := bot.New(cfg, st)
+	az, err := auth.New(cfg.DataDir, cfg.Access)
+	if err != nil {
+		log.Fatalf("auth: %v", err)
+	}
+	b, err := bot.New(cfg, az, st)
 	if err != nil {
 		log.Fatalf("bot: %v", err)
 	}

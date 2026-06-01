@@ -16,7 +16,7 @@ func (b *Bot) handleShellInput(msg *tgbotapi.Message) {
 	if msg.Text == btnExit {
 		b.setMode(chat, modeIdle)
 		b.shell.Reset(chat)
-		b.sendKeyboard(chat, "Shell closed.", mainKeyboard())
+		b.sendKeyboard(chat, "Shell closed.", mainKeyboard(b.auth.IsAdmin(msg.From.ID)))
 		return
 	}
 	out, err := b.shell.Run(chat, msg.Text)

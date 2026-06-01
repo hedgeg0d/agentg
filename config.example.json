@@ -1,5 +1,12 @@
 {
   "token": "PUT-YOUR-TELEGRAM-BOT-TOKEN-HERE",
   "data_dir": "data",
-  "command_timeout_seconds": 30
+  "command_timeout_seconds": 30,
+  "access": {
+    "admins": [],
+    "allowed_users": [],
+    "allowed_usernames": [],
+    "password": "",
+    "session_ttl_minutes": 1440
+  }
 }

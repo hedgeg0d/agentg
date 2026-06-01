@@ -6,6 +6,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
+	"github.com/hedgeg0d/agentg/internal/auth"
 	"github.com/hedgeg0d/agentg/internal/config"
 	"github.com/hedgeg0d/agentg/internal/shell"
 	"github.com/hedgeg0d/agentg/internal/store"
@@ -15,11 +16,14 @@ const (
 	modeIdle = iota
 	modeShell
 	modeServiceAdd
+	modePassword
+	modeUserAdd
 )
 
 type Bot struct {
 	api   *tgbotapi.BotAPI
 	cfg   *config.Config
+	auth  *auth.Authorizer
 	store *store.Store
 	shell *shell.Manager
 
@@ -28,7 +32,7 @@ type Bot struct {
 	monitors map[int64]chan struct{}
 }
 
-func New(cfg *config.Config, st *store.Store) (*Bot, error) {
+func New(cfg *config.Config, az *auth.Authorizer, st *store.Store) (*Bot, error) {
 	api, err := tgbotapi.NewBotAPI(cfg.Token)
 	if err != nil {
 		return nil, err
@@ -36,6 +40,7 @@ func New(cfg *config.Config, st *store.Store) (*Bot, error) {
 	return &Bot{
 		api:      api,
 		cfg:      cfg,
+		auth:     az,
 		store:    st,
 		shell:    shell.NewManager(cfg.Timeout()),
 		modes:    map[int64]int{},
@@ -58,8 +63,8 @@ func (b *Bot) Run() {
 	}
 }
 
-func (b *Bot) authorize(id int64) bool {
-	return b.store.ClaimOwner(id)
+func (b *Bot) principal(from *tgbotapi.User) auth.Principal {
+	return auth.Principal{ID: from.ID, Username: from.UserName}
 }
 
 func (b *Bot) mode(chat int64) int {
@@ -75,9 +80,16 @@ func (b *Bot) setMode(chat int64, m int) {
 }
 
 func (b *Bot) onMessage(msg *tgbotapi.Message) {
-	if !b.authorize(msg.From.ID) {
-		b.send(msg.Chat.ID, "⛔ Access denied. This machine already has an owner.")
+	switch b.auth.Check(b.principal(msg.From)) {
+	case auth.Denied:
+		b.handleDenied(msg)
 		return
+	case auth.NeedPassword:
+		b.handlePassword(msg)
+		return
+	}
+	if b.mode(msg.Chat.ID) == modePassword {
+		b.setMode(msg.Chat.ID, modeIdle)
 	}
 	if msg.IsCommand() {
 		b.onCommand(msg)
@@ -88,6 +100,8 @@ func (b *Bot) onMessage(msg *tgbotapi.Message) {
 		b.handleShellInput(msg)
 	case modeServiceAdd:
 		b.handleServiceAdd(msg)
+	case modeUserAdd:
+		b.handleUserAdd(msg)
 	default:
 		b.routeButton(msg)
 	}
@@ -97,13 +111,15 @@ func (b *Bot) onCommand(msg *tgbotapi.Message) {
 	switch msg.Command() {
 	case "start":
 		b.setMode(msg.Chat.ID, modeIdle)
-		b.sendKeyboard(msg.Chat.ID, "👋 *agentg* ready. Pick an action below.", mainKeyboard())
+		b.sendKeyboard(msg.Chat.ID, "👋 *agentg* ready. Pick an action below.", mainKeyboard(b.auth.IsAdmin(msg.From.ID)))
 	case "monitor":
 		b.startMonitor(msg.Chat.ID)
 	case "services":
 		b.showServices(msg.Chat.ID)
 	case "shell":
 		b.enterShell(msg.Chat.ID)
+	case "users":
+		b.usersCommand(msg)
 	case "id":
 		b.send(msg.Chat.ID, "Your ID: `"+itoa(msg.From.ID)+"`")
 	default:
@@ -121,13 +137,15 @@ func (b *Bot) routeButton(msg *tgbotapi.Message) {
 		b.showServices(msg.Chat.ID)
 	case btnStatus:
 		b.sendStatus(msg.Chat.ID)
+	case btnUsers:
+		b.usersCommand(msg)
 	default:
-		b.sendKeyboard(msg.Chat.ID, "Pick an action below.", mainKeyboard())
+		b.sendKeyboard(msg.Chat.ID, "Pick an action below.", mainKeyboard(b.auth.IsAdmin(msg.From.ID)))
 	}
 }
 
 func (b *Bot) onCallback(cb *tgbotapi.CallbackQuery) {
-	if !b.authorize(cb.From.ID) {
+	if b.auth.Check(b.principal(cb.From)) != auth.Allowed {
 		b.answer(cb.ID, "Access denied")
 		return
 	}

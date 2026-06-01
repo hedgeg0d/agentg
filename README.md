@@ -14,15 +14,46 @@ Pure Go, **no cgo**, so it cross-compiles cleanly to targets like RISC-V.
 - **Services** — inspect `systemd` units, start/stop/restart them, and pin favorites
   to a quick-access list for one-tap control.
 - **Status** — one-shot host snapshot (hostname, kernel, resources).
-- **Single-owner security** — the first user to `/start` claims the machine; everyone
-  else is denied.
+- **Access control** — declarative whitelist policy plus runtime management:
+  admins, allowed Telegram IDs and `@usernames`, an optional shared password, and
+  password sessions with a configurable TTL. Admins manage the whitelist from inside
+  Telegram via the *Users* menu — no redeploy needed.
+
+## Access control
+
+Policy is seeded from `config.json` and combined with runtime state persisted to
+`data/access.json`:
+
+```json
+"access": {
+  "admins": [111111111],
+  "allowed_users": [222222222],
+  "allowed_usernames": ["alice"],
+  "password": "s3cret",
+  "session_ttl_minutes": 1440
+}
+```
+
+- **admins** — full access, plus the *Users* menu to grant/revoke others.
+- **allowed_users / allowed_usernames** — granted access (usernames match
+  case-insensitively, with or without the leading `@`).
+- **password** — if set, unknown users are prompted for it; a correct answer opens a
+  session valid for `session_ttl_minutes` (`0` = never expires). Leave empty to deny
+  everyone not on the whitelist.
+- **Bootstrap** — if no admin is configured *and* no password is set, the first user
+  to message the bot is registered as admin. When using a password, configure at
+  least one admin explicitly.
+
+Everyone else gets a clear *access denied* reply showing their ID and username so an
+admin can add them in two taps.
 
 ## Architecture
 
 ```
 main.go                 entry point, wiring
-internal/config         config loading
-internal/store          owner + pinned services (JSON persistence)
+internal/config         declarative configuration
+internal/auth           access policy, password sessions, whitelist persistence
+internal/store          pinned services (JSON persistence)
 internal/shell          persistent bash sessions
 internal/monitor        /proc-based resource sampling + rendering
 internal/services       systemd control
@@ -50,4 +81,4 @@ CGO_ENABLED=0 GOARCH=riscv64 GOOS=linux go build -o agentg .
 
 ## Commands
 
-`/start` · `/shell` · `/monitor` · `/services` · `/id`
+`/start` · `/shell` · `/monitor` · `/services` · `/users` (admin) · `/id`

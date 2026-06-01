@@ -11,6 +11,15 @@ type Config struct {
 	Token          string `json:"token"`
 	DataDir        string `json:"data_dir"`
 	CommandTimeout int    `json:"command_timeout_seconds"`
+	Access         Access `json:"access"`
+}
+
+type Access struct {
+	Admins           []int64  `json:"admins"`
+	AllowedUsers     []int64  `json:"allowed_users"`
+	AllowedUsernames []string `json:"allowed_usernames"`
+	Password         string   `json:"password"`
+	SessionTTLMin    int      `json:"session_ttl_minutes"`
 }
 
 func Load(path string) (*Config, error) {
@@ -36,4 +45,8 @@ func Load(path string) (*Config, error) {
 
 func (c *Config) Timeout() time.Duration {
 	return time.Duration(c.CommandTimeout) * time.Second
+}
+
+func (a Access) SessionTTL() time.Duration {
+	return time.Duration(a.SessionTTLMin) * time.Minute
 }

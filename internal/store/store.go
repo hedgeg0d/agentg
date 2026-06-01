@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 )
 
 type state struct {
-	Owner    int64    `json:"owner"`
 	Services []string `json:"services"`
 }
 
@@ -40,23 +40,6 @@ func (s *Store) flush() error {
 	return os.WriteFile(s.path, raw, 0o600)
 }
 
-func (s *Store) Owner() int64 {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.st.Owner
-}
-
-func (s *Store) ClaimOwner(id int64) bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.st.Owner != 0 {
-		return s.st.Owner == id
-	}
-	s.st.Owner = id
-	_ = s.flush()
-	return true
-}
-
 func (s *Store) Services() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -68,10 +51,8 @@ func (s *Store) Services() []string {
 func (s *Store) AddService(name string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for _, v := range s.st.Services {
-		if v == name {
-			return false
-		}
+	if slices.Contains(s.st.Services, name) {
+		return false
 	}
 	s.st.Services = append(s.st.Services, name)
 	_ = s.flush()
@@ -81,12 +62,11 @@ func (s *Store) AddService(name string) bool {
 func (s *Store) RemoveService(name string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for i, v := range s.st.Services {
-		if v == name {
-			s.st.Services = append(s.st.Services[:i], s.st.Services[i+1:]...)
-			_ = s.flush()
-			return true
-		}
+	n := len(s.st.Services)
+	s.st.Services = slices.DeleteFunc(s.st.Services, func(v string) bool { return v == name })
+	if len(s.st.Services) == n {
+		return false
 	}
-	return false
+	_ = s.flush()
+	return true
 }

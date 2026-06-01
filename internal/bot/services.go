@@ -26,7 +26,7 @@ func (b *Bot) handleServiceAdd(msg *tgbotapi.Message) {
 	chat := msg.Chat.ID
 	b.setMode(chat, modeIdle)
 	if msg.Text == btnExit {
-		b.sendKeyboard(chat, "Cancelled.", mainKeyboard())
+		b.sendKeyboard(chat, "Cancelled.", mainKeyboard(b.auth.IsAdmin(msg.From.ID)))
 		return
 	}
 	name := normalize(msg.Text)

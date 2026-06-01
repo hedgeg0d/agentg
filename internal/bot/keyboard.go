@@ -3,6 +3,7 @@ package bot
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
+	"github.com/hedgeg0d/agentg/internal/auth"
 	"github.com/hedgeg0d/agentg/internal/services"
 )
 
@@ -11,11 +12,12 @@ const (
 	btnMonitor  = "📊 Monitor"
 	btnServices = "⚙️ Services"
 	btnStatus   = "ℹ️ Status"
+	btnUsers    = "👥 Users"
 	btnExit     = "⬅️ Back"
 )
 
-func mainKeyboard() tgbotapi.ReplyKeyboardMarkup {
-	kb := tgbotapi.NewReplyKeyboard(
+func mainKeyboard(admin bool) tgbotapi.ReplyKeyboardMarkup {
+	rows := [][]tgbotapi.KeyboardButton{
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton(btnShell),
 			tgbotapi.NewKeyboardButton(btnMonitor),
@@ -24,7 +26,13 @@ func mainKeyboard() tgbotapi.ReplyKeyboardMarkup {
 			tgbotapi.NewKeyboardButton(btnServices),
 			tgbotapi.NewKeyboardButton(btnStatus),
 		),
-	)
+	}
+	if admin {
+		rows = append(rows, tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(btnUsers),
+		))
+	}
+	kb := tgbotapi.NewReplyKeyboard(rows...)
 	kb.ResizeKeyboard = true
 	return kb
 }
@@ -58,6 +66,20 @@ func servicesKeyboard(list []services.Status) tgbotapi.InlineKeyboardMarkup {
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("➕ Add", "svc:add"),
 		tgbotapi.NewInlineKeyboardButtonData("🔄 Refresh", "svc:list"),
+	))
+	return tgbotapi.NewInlineKeyboardMarkup(rows...)
+}
+
+func usersKeyboard(entries []auth.Entry) tgbotapi.InlineKeyboardMarkup {
+	var rows [][]tgbotapi.InlineKeyboardButton
+	for _, e := range entries {
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("❌ "+e.Display, "usr:rm:"+e.Token),
+		))
+	}
+	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("➕ Add", "usr:add"),
+		tgbotapi.NewInlineKeyboardButtonData("🔄 Refresh", "usr:list"),
 	))
 	return tgbotapi.NewInlineKeyboardMarkup(rows...)
 }
