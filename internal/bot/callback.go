@@ -9,7 +9,7 @@ import (
 )
 
 func emptyInline() tgbotapi.InlineKeyboardMarkup {
-	return tgbotapi.NewInlineKeyboardMarkup()
+	return tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{}}
 }
 
 func (b *Bot) routeCallback(cb *tgbotapi.CallbackQuery) {

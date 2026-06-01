@@ -47,6 +47,7 @@ func (b *Bot) Run() {
 	log.Printf("authorized as @%s", b.api.Self.UserName)
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 30
+	u.AllowedUpdates = []string{"message", "callback_query"}
 	for update := range b.api.GetUpdatesChan(u) {
 		switch {
 		case update.CallbackQuery != nil:
