@@ -39,7 +39,10 @@ Policy is seeded from `config.json` and combined with runtime state persisted to
   case-insensitively, with or without the leading `@`).
 - **password** — if set, unknown users are prompted for it; a correct answer opens a
   session valid for `session_ttl_minutes` (`0` = never expires). Leave empty to deny
-  everyone not on the whitelist.
+  everyone not on the whitelist. Store a **bcrypt hash** rather than the plaintext —
+  generate one with `./agentg -hashpw` and paste the `$2a$…` string into the config.
+  Plaintext is still accepted (with a startup warning); both are checked in constant
+  time, and the password is never written to `access.json`.
 - **Bootstrap** — if no admin is configured *and* no password is set, the first user
   to message the bot is registered as admin. When using a password, configure at
   least one admin explicitly.

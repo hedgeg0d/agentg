@@ -28,7 +28,7 @@ type Principal struct {
 type Authorizer struct {
 	mu       sync.RWMutex
 	path     string
-	password string
+	password secret
 	ttl      time.Duration
 
 	seedAdmins    map[int64]bool
@@ -48,7 +48,7 @@ type persisted struct {
 func New(dir string, cfg config.Access) (*Authorizer, error) {
 	a := &Authorizer{
 		path:          filepath.Join(dir, "access.json"),
-		password:      cfg.Password,
+		password:      newSecret(cfg.Password),
 		ttl:           cfg.SessionTTL(),
 		seedAdmins:    toIntSet(cfg.Admins),
 		seedUsers:     toIntSet(cfg.AllowedUsers),
@@ -75,7 +75,7 @@ func (a *Authorizer) Check(p Principal) Decision {
 	if a.isAdmin(p.ID) || a.isAllowed(p) || a.hasSession(p.ID) {
 		return Allowed
 	}
-	if a.password != "" {
+	if a.password.set {
 		return NeedPassword
 	}
 	return Denied
@@ -84,7 +84,7 @@ func (a *Authorizer) Check(p Principal) Decision {
 func (a *Authorizer) Authenticate(id int64, password string) (time.Time, bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.password == "" || password != a.password {
+	if !a.password.verify(password) {
 		return time.Time{}, false
 	}
 	var exp time.Time
@@ -96,6 +96,10 @@ func (a *Authorizer) Authenticate(id int64, password string) (time.Time, bool) {
 	a.st.Sessions[id] = unix
 	a.flush()
 	return exp, true
+}
+
+func (a *Authorizer) PlaintextPassword() bool {
+	return a.password.set && !a.password.hashed
 }
 
 func (a *Authorizer) IsAdmin(id int64) bool {
