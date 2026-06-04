@@ -13,7 +13,7 @@ const (
 	btnServices = "⚙️ Services"
 	btnStatus   = "ℹ️ Status"
 	btnUsers    = "👥 Users"
-	btnPower    = "⏻ Power"
+	btnPower    = "🔌 Power"
 	btnExit     = "⬅️ Back"
 )
 
@@ -76,7 +76,7 @@ func powerMenuKeyboard() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔄 Reboot", "pwr:ask:reboot"),
-			tgbotapi.NewInlineKeyboardButtonData("⏻ Power off", "pwr:ask:poweroff"),
+			tgbotapi.NewInlineKeyboardButtonData("🔌 Power off", "pwr:ask:poweroff"),
 		),
 	)
 }

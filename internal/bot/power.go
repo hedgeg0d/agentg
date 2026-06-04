@@ -11,7 +11,7 @@ func (b *Bot) powerCommand(msg *tgbotapi.Message) {
 		b.send(msg.Chat.ID, "⛔ Admins only.")
 		return
 	}
-	b.sendInline(msg.Chat.ID, "⏻ *Power*\nChoose an action.", powerMenuKeyboard())
+	b.sendInline(msg.Chat.ID, "🔌 *Power*\nChoose an action.", powerMenuKeyboard())
 }
 
 func (b *Bot) powerCallback(chat int64, cb *tgbotapi.CallbackQuery, rest string) {
@@ -22,7 +22,7 @@ func (b *Bot) powerCallback(chat int64, cb *tgbotapi.CallbackQuery, rest string)
 	id := cb.Message.MessageID
 	switch rest {
 	case "menu":
-		b.editInline(chat, id, "⏻ *Power*\nChoose an action.", powerMenuKeyboard())
+		b.editInline(chat, id, "🔌 *Power*\nChoose an action.", powerMenuKeyboard())
 		b.answer(cb.ID, "")
 	case "ask:reboot":
 		b.editInline(chat, id, "⚠️ *Reboot this machine?*", powerConfirmKeyboard("reboot", "Reboot"))
@@ -33,7 +33,7 @@ func (b *Bot) powerCallback(chat int64, cb *tgbotapi.CallbackQuery, rest string)
 	case "do:reboot":
 		b.runPower(chat, id, cb, "♻️ Rebooting now…", power.Reboot)
 	case "do:poweroff":
-		b.runPower(chat, id, cb, "⏻ Powering off now…", power.Poweroff)
+		b.runPower(chat, id, cb, "🔌 Powering off now…", power.Poweroff)
 	}
 }
 
