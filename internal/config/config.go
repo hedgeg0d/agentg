@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Token          string        `json:"token"`
 	DataDir        string        `json:"data_dir"`
+	UploadDir      string        `json:"upload_dir"`
 	CommandTimeout int           `json:"command_timeout_seconds"`
 	Access         Access        `json:"access"`
 	Notifications  Notifications `json:"notifications"`
@@ -52,6 +53,9 @@ func Load(path string) (*Config, error) {
 	}
 	if cfg.DataDir == "" {
 		cfg.DataDir = "data"
+	}
+	if cfg.UploadDir == "" {
+		cfg.UploadDir = "."
 	}
 	if cfg.CommandTimeout <= 0 {
 		cfg.CommandTimeout = 30

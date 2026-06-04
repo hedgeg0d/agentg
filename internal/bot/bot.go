@@ -91,6 +91,10 @@ func (b *Bot) onMessage(msg *tgbotapi.Message) {
 	if b.mode(msg.Chat.ID) == modePassword {
 		b.setMode(msg.Chat.ID, modeIdle)
 	}
+	if msg.Document != nil || len(msg.Photo) > 0 || msg.Video != nil || msg.Audio != nil {
+		b.handleUpload(msg)
+		return
+	}
 	if msg.IsCommand() {
 		b.onCommand(msg)
 		return
@@ -124,6 +128,8 @@ func (b *Bot) onCommand(msg *tgbotapi.Message) {
 		b.usersCommand(msg)
 	case "power":
 		b.powerCommand(msg)
+	case "download":
+		b.downloadCommand(msg)
 	case "id":
 		b.send(msg.Chat.ID, "Your ID: `"+itoa(msg.From.ID)+"`")
 	default:

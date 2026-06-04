@@ -19,6 +19,9 @@ Pure Go, **no cgo**, so it cross-compiles cleanly to targets like RISC-V.
   to a quick-access list for one-tap control.
 - **Status** — one-shot host snapshot (hostname, kernel, resources).
 - **Power** — admin-only reboot / power off with an inline confirmation step.
+- **File transfer** — `/download <path>` sends a file from the machine; sending any
+  document/photo to the bot saves it (to `upload_dir`, or to the path given as the
+  caption).
 - **D-Bus notifications** — local programs can push notifications to Telegram over
   D-Bus, and the bot can optionally pose as the freedesktop notification daemon so
   plain `notify-send` is forwarded too.
@@ -151,4 +154,4 @@ CGO_ENABLED=0 GOARCH=riscv64 GOOS=linux go build -o agentg .
 
 ## Commands
 
-`/start` · `/shell` · `/monitor` · `/services` · `/fav` · `/users` (admin) · `/power` (admin) · `/id`
+`/start` · `/shell` · `/monitor` · `/services` · `/fav` · `/download` · `/users` (admin) · `/power` (admin) · `/id`

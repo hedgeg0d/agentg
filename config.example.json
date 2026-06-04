@@ -1,6 +1,7 @@
 {
   "token": "PUT-YOUR-TELEGRAM-BOT-TOKEN-HERE",
   "data_dir": "data",
+  "upload_dir": ".",
   "command_timeout_seconds": 30,
   "access": {
     "admins": [],
