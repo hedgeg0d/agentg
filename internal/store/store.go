@@ -10,6 +10,7 @@ import (
 
 type state struct {
 	Services []string `json:"services"`
+	Commands []string `json:"commands"`
 }
 
 type Store struct {
@@ -67,6 +68,43 @@ func (s *Store) RemoveService(name string) bool {
 	if len(s.st.Services) == n {
 		return false
 	}
+	_ = s.flush()
+	return true
+}
+
+func (s *Store) Commands() []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return slices.Clone(s.st.Commands)
+}
+
+func (s *Store) CommandAt(i int) (string, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if i < 0 || i >= len(s.st.Commands) {
+		return "", false
+	}
+	return s.st.Commands[i], true
+}
+
+func (s *Store) AddCommand(cmd string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if slices.Contains(s.st.Commands, cmd) {
+		return false
+	}
+	s.st.Commands = append(s.st.Commands, cmd)
+	_ = s.flush()
+	return true
+}
+
+func (s *Store) RemoveCommandAt(i int) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if i < 0 || i >= len(s.st.Commands) {
+		return false
+	}
+	s.st.Commands = slices.Delete(s.st.Commands, i, i+1)
 	_ = s.flush()
 	return true
 }

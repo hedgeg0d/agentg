@@ -11,7 +11,8 @@ Pure Go, **no cgo**, so it cross-compiles cleanly to targets like RISC-V.
   survive between commands). Output streams live: the bot edits one message every
   couple of seconds as the command produces output, so long runs like `apt upgrade`
   show progress instead of going silent. An inactivity timeout restarts the session
-  if a command stalls (e.g. one waiting on stdin).
+  if a command stalls (e.g. one waiting on stdin). Frequently used commands can be
+  saved as favorites and run with one tap from the shell screen.
 - **Monitor** — a single message that auto-edits every few seconds with CPU, RAM,
   swap, disk, load and uptime. A *Stop* button under it ends the stream.
 - **Services** — inspect `systemd` units, start/stop/restart them, and pin favorites
@@ -107,6 +108,13 @@ running, with the complete log posted in chunks at the end.
 produces no output for that long, so steadily-printing commands run to completion
 while a command blocked on stdin is cut off and the session restarted.
 
+### Favorite commands
+
+Save a command with `/fav <command>` (e.g. `/fav apt update`). On entering shell mode
+the bot lists your favorites as one-tap buttons; running one prints the command above
+its output so the result is self-explanatory. Send `/fav` with no argument to open the
+list and remove entries.
+
 ## Architecture
 
 ```
@@ -142,4 +150,4 @@ CGO_ENABLED=0 GOARCH=riscv64 GOOS=linux go build -o agentg .
 
 ## Commands
 
-`/start` · `/shell` · `/monitor` · `/services` · `/users` (admin) · `/id`
+`/start` · `/shell` · `/monitor` · `/services` · `/fav` · `/users` (admin) · `/id`

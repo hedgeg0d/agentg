@@ -22,6 +22,8 @@ func (b *Bot) routeCallback(cb *tgbotapi.CallbackQuery) {
 		b.serviceCallback(chat, cb, rest)
 	case "usr":
 		b.userCallback(chat, cb, rest)
+	case "cmd":
+		b.commandCallback(chat, cb, rest)
 	default:
 		b.answer(cb.ID, "")
 	}

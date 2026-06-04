@@ -70,6 +70,33 @@ func servicesKeyboard(list []services.Status) tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(rows...)
 }
 
+func favRunKeyboard(cmds []string) tgbotapi.InlineKeyboardMarkup {
+	var rows [][]tgbotapi.InlineKeyboardButton
+	for i, c := range cmds {
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("▶️ "+cmdLabel(c), "cmd:run:"+itoa(int64(i))),
+		))
+	}
+	return tgbotapi.NewInlineKeyboardMarkup(rows...)
+}
+
+func favManageKeyboard(cmds []string) tgbotapi.InlineKeyboardMarkup {
+	var rows [][]tgbotapi.InlineKeyboardButton
+	for i, c := range cmds {
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("❌ "+cmdLabel(c), "cmd:rm:"+itoa(int64(i))),
+		))
+	}
+	return tgbotapi.NewInlineKeyboardMarkup(rows...)
+}
+
+func cmdLabel(c string) string {
+	if len(c) > 32 {
+		return c[:31] + "…"
+	}
+	return c
+}
+
 func usersKeyboard(entries []auth.Entry) tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, e := range entries {

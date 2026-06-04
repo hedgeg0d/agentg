@@ -118,6 +118,8 @@ func (b *Bot) onCommand(msg *tgbotapi.Message) {
 		b.showServices(msg.Chat.ID)
 	case "shell":
 		b.enterShell(msg.Chat.ID)
+	case "fav":
+		b.favCommand(msg)
 	case "users":
 		b.usersCommand(msg)
 	case "id":
