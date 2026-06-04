@@ -18,6 +18,7 @@ Pure Go, **no cgo**, so it cross-compiles cleanly to targets like RISC-V.
 - **Services** — inspect `systemd` units, start/stop/restart them, and pin favorites
   to a quick-access list for one-tap control.
 - **Status** — one-shot host snapshot (hostname, kernel, resources).
+- **Power** — admin-only reboot / power off with an inline confirmation step.
 - **D-Bus notifications** — local programs can push notifications to Telegram over
   D-Bus, and the bot can optionally pose as the freedesktop notification daemon so
   plain `notify-send` is forwarded too.
@@ -150,4 +151,4 @@ CGO_ENABLED=0 GOARCH=riscv64 GOOS=linux go build -o agentg .
 
 ## Commands
 
-`/start` · `/shell` · `/monitor` · `/services` · `/fav` · `/users` (admin) · `/id`
+`/start` · `/shell` · `/monitor` · `/services` · `/fav` · `/users` (admin) · `/power` (admin) · `/id`

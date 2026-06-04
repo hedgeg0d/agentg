@@ -13,6 +13,7 @@ const (
 	btnServices = "⚙️ Services"
 	btnStatus   = "ℹ️ Status"
 	btnUsers    = "👥 Users"
+	btnPower    = "⏻ Power"
 	btnExit     = "⬅️ Back"
 )
 
@@ -30,6 +31,7 @@ func mainKeyboard(admin bool) tgbotapi.ReplyKeyboardMarkup {
 	if admin {
 		rows = append(rows, tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton(btnUsers),
+			tgbotapi.NewKeyboardButton(btnPower),
 		))
 	}
 	kb := tgbotapi.NewReplyKeyboard(rows...)
@@ -68,6 +70,24 @@ func servicesKeyboard(list []services.Status) tgbotapi.InlineKeyboardMarkup {
 		tgbotapi.NewInlineKeyboardButtonData("🔄 Refresh", "svc:list"),
 	))
 	return tgbotapi.NewInlineKeyboardMarkup(rows...)
+}
+
+func powerMenuKeyboard() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("🔄 Reboot", "pwr:ask:reboot"),
+			tgbotapi.NewInlineKeyboardButtonData("⏻ Power off", "pwr:ask:poweroff"),
+		),
+	)
+}
+
+func powerConfirmKeyboard(action, label string) tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("✅ Yes, "+label, "pwr:do:"+action),
+			tgbotapi.NewInlineKeyboardButtonData("❌ Cancel", "pwr:menu"),
+		),
+	)
 }
 
 func favRunKeyboard(cmds []string) tgbotapi.InlineKeyboardMarkup {

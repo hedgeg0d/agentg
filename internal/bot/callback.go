@@ -24,6 +24,8 @@ func (b *Bot) routeCallback(cb *tgbotapi.CallbackQuery) {
 		b.userCallback(chat, cb, rest)
 	case "cmd":
 		b.commandCallback(chat, cb, rest)
+	case "pwr":
+		b.powerCallback(chat, cb, rest)
 	default:
 		b.answer(cb.ID, "")
 	}

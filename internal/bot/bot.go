@@ -122,6 +122,8 @@ func (b *Bot) onCommand(msg *tgbotapi.Message) {
 		b.favCommand(msg)
 	case "users":
 		b.usersCommand(msg)
+	case "power":
+		b.powerCommand(msg)
 	case "id":
 		b.send(msg.Chat.ID, "Your ID: `"+itoa(msg.From.ID)+"`")
 	default:
@@ -141,6 +143,8 @@ func (b *Bot) routeButton(msg *tgbotapi.Message) {
 		b.sendStatus(msg.Chat.ID)
 	case btnUsers:
 		b.usersCommand(msg)
+	case btnPower:
+		b.powerCommand(msg)
 	default:
 		b.sendKeyboard(msg.Chat.ID, "Pick an action below.", mainKeyboard(b.auth.IsAdmin(msg.From.ID)))
 	}
