@@ -13,6 +13,15 @@ type Config struct {
 	CommandTimeout int           `json:"command_timeout_seconds"`
 	Access         Access        `json:"access"`
 	Notifications  Notifications `json:"notifications"`
+	Shell          Shell         `json:"shell"`
+}
+
+type Shell struct {
+	StreamOutput *bool `json:"stream_output"`
+}
+
+func (s Shell) Streaming() bool {
+	return s.StreamOutput == nil || *s.StreamOutput
 }
 
 type Notifications struct {

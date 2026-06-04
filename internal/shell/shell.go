@@ -62,49 +62,93 @@ func newSession() (*session, error) {
 	return &session{cmd: cmd, stdin: stdin, stdout: bufio.NewReader(stdout)}, nil
 }
 
-func (m *Manager) Run(id int64, command string) (string, error) {
+type Update struct {
+	Output string
+	Done   bool
+	Err    error
+}
+
+func (m *Manager) Run(id int64, command string) (<-chan Update, error) {
 	s, err := m.get(id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	out := make(chan Update, 32)
+	go s.run(command, m.timeout, out, func() { m.Reset(id) })
+	return out, nil
+}
+
+func (s *session) run(command string, timeout time.Duration, out chan<- Update, reset func()) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	defer close(out)
 
 	if _, err := fmt.Fprintf(s.stdin, "%s\nprintf '\\n%s%%d\\n' \"$?\"\n", command, marker); err != nil {
-		return "", err
+		out <- Update{Done: true, Err: err}
+		return
 	}
 
-	type result struct {
-		out string
-		err error
-	}
-	done := make(chan result, 1)
+	lines := make(chan string)
+	codes := make(chan string, 1)
+	fail := make(chan error, 1)
+	quit := make(chan struct{})
+	defer close(quit)
+
 	go func() {
-		var b strings.Builder
 		for {
 			line, err := s.stdout.ReadString('\n')
 			if err != nil {
-				done <- result{b.String(), err}
+				select {
+				case fail <- err:
+				case <-quit:
+				}
 				return
 			}
 			if strings.HasPrefix(line, marker) {
-				code := strings.TrimSpace(strings.TrimPrefix(line, marker))
-				out := b.String()
-				if code != "0" && code != "" {
-					out = fmt.Sprintf("%s[exit %s]", out, code)
+				select {
+				case codes <- strings.TrimSpace(strings.TrimPrefix(line, marker)):
+				case <-quit:
 				}
-				done <- result{out, nil}
 				return
 			}
-			b.WriteString(line)
+			select {
+			case lines <- line:
+			case <-quit:
+				return
+			}
 		}
 	}()
 
-	select {
-	case r := <-done:
-		return r.out, r.err
-	case <-time.After(m.timeout):
-		return "", fmt.Errorf("command timed out after %s", m.timeout)
+	var b strings.Builder
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	for {
+		select {
+		case line := <-lines:
+			b.WriteString(line)
+			out <- Update{Output: b.String()}
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+			timer.Reset(timeout)
+		case code := <-codes:
+			text := b.String()
+			if code != "0" && code != "" {
+				text += fmt.Sprintf("\n[exit %s]", code)
+			}
+			out <- Update{Output: text, Done: true}
+			return
+		case err := <-fail:
+			out <- Update{Output: b.String(), Done: true, Err: err}
+			return
+		case <-timer.C:
+			out <- Update{Output: b.String(), Done: true, Err: fmt.Errorf("no output for %s, session restarted", timeout)}
+			go reset()
+			return
+		}
 	}
 }
 

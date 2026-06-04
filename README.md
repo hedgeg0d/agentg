@@ -8,7 +8,10 @@ Pure Go, **no cgo**, so it cross-compiles cleanly to targets like RISC-V.
 ## Features
 
 - **Shell** — persistent bash session per chat (working directory and environment
-  survive between commands), with command timeouts and auto-recovery.
+  survive between commands). Output streams live: the bot edits one message every
+  couple of seconds as the command produces output, so long runs like `apt upgrade`
+  show progress instead of going silent. An inactivity timeout restarts the session
+  if a command stalls (e.g. one waiting on stdin).
 - **Monitor** — a single message that auto-edits every few seconds with CPU, RAM,
   swap, disk, load and uptime. A *Stop* button under it ends the stream.
 - **Services** — inspect `systemd` units, start/stop/restart them, and pin favorites
@@ -85,6 +88,24 @@ notify-send "Disk" "root volume is 85% full"
 
 This best-effort claim is skipped (with a log line) if a desktop notification daemon
 already owns that name, so it is intended for headless machines.
+
+## Shell output
+
+```json
+"shell": {
+  "stream_output": true
+}
+```
+
+When `stream_output` is enabled (the default — omit the block or set `true`), command
+output is streamed by editing a single Telegram message at most once every two
+seconds. Set it to `false` to instead post the full output once the command
+completes. Output longer than a Telegram message is shown as a live tail while
+running, with the complete log posted in chunks at the end.
+
+`command_timeout_seconds` is an **inactivity** timeout: it fires only when a command
+produces no output for that long, so steadily-printing commands run to completion
+while a command blocked on stdin is cut off and the session restarted.
 
 ## Architecture
 

@@ -47,6 +47,22 @@ func (b *Bot) editInline(chat int64, id int, text string, kb tgbotapi.InlineKeyb
 	b.dispatch(edit)
 }
 
+func (b *Bot) sendMarkdownV2(chat int64, text string) (int, error) {
+	msg := tgbotapi.NewMessage(chat, text)
+	msg.ParseMode = tgbotapi.ModeMarkdownV2
+	sent, err := b.api.Send(msg)
+	if err != nil {
+		log.Printf("sendMarkdownV2: %v", err)
+	}
+	return sent.MessageID, err
+}
+
+func (b *Bot) editMarkdownV2(chat int64, id int, text string) {
+	edit := tgbotapi.NewEditMessageText(chat, id, text)
+	edit.ParseMode = tgbotapi.ModeMarkdownV2
+	b.dispatch(edit)
+}
+
 func (b *Bot) answer(cbID, text string) {
 	if _, err := b.api.Request(tgbotapi.NewCallback(cbID, text)); err != nil {
 		log.Printf("answer: %v", err)
